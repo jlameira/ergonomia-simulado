@@ -1,0 +1,750 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Simulado – Métodos e Técnicas em Ergonomia</title>
+<style>
+:root{--bg:#f5f6f8;--card:#fff;--tx:#1d2330;--mut:#6b7385;--bd:#dfe3ea;--pri:#2f5bea;--pri2:#e8eefe;--ok:#15803d;--okbg:#e6f6ec;--ko:#b91c1c;--kobg:#fdecec;--wa:#a16207;--wabg:#fdf3dc}
+@media(prefers-color-scheme:dark){:root{--bg:#12151c;--card:#1b2029;--tx:#e8ebf1;--mut:#9aa3b5;--bd:#2c3340;--pri:#6c8cff;--pri2:#222b45;--ok:#4ade80;--okbg:#14301f;--ko:#f87171;--kobg:#3a1a1a;--wa:#facc15;--wabg:#352c12}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--tx);font:16px/1.55 system-ui,-apple-system,Segoe UI,Roboto,sans-serif}
+.wrap{max-width:820px;margin:0 auto;padding:18px 14px 60px}
+h1{font-size:1.4rem;margin:.2rem 0 .1rem}h2{font-size:1.05rem;margin:1.2rem 0 .5rem}
+.sub{color:var(--mut);font-size:.9rem;margin-bottom:14px}
+.card{background:var(--card);border:1px solid var(--bd);border-radius:14px;padding:18px;margin-bottom:14px}
+button{font:inherit;cursor:pointer;border-radius:10px;border:1px solid var(--bd);background:var(--card);color:var(--tx);padding:9px 14px}
+button:hover{border-color:var(--pri)}
+button.pri{background:var(--pri);border-color:var(--pri);color:#fff;font-weight:600}
+button.pri:hover{filter:brightness(1.08)}
+button:disabled{opacity:.5;cursor:default}
+.row{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.chip{padding:6px 12px;border-radius:999px;font-size:.88rem}
+.chip.on{background:var(--pri2);border-color:var(--pri);color:var(--pri);font-weight:600}
+.topics{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:8px}
+.topic{display:flex;gap:8px;align-items:flex-start;padding:9px 11px;border:1px solid var(--bd);border-radius:10px;cursor:pointer;font-size:.92rem}
+.topic.on{border-color:var(--pri);background:var(--pri2)}
+.topic input{margin-top:4px}
+.topic small{color:var(--mut);display:block}
+.bar{height:8px;background:var(--bd);border-radius:6px;overflow:hidden}
+.bar>i{display:block;height:100%;background:var(--pri);transition:width .25s}
+.meta{display:flex;justify-content:space-between;gap:8px;color:var(--mut);font-size:.85rem;margin:8px 0 12px;flex-wrap:wrap}
+.badge{display:inline-block;font-size:.75rem;padding:2px 9px;border-radius:999px;background:var(--pri2);color:var(--pri);font-weight:600;margin-right:6px}
+.q{font-size:1.12rem;margin:10px 0 16px}
+.q input.blank{font:inherit;width:11em;max-width:100%;padding:2px 8px;border:0;border-bottom:2px solid var(--pri);background:var(--pri2);color:var(--tx);border-radius:6px 6px 0 0;outline:none;margin:2px 3px}
+.q input.blank.ok{border-color:var(--ok);background:var(--okbg)}
+.q input.blank.ko{border-color:var(--ko);background:var(--kobg)}
+.opts{display:grid;gap:9px}
+.opt{text-align:left;padding:12px 14px;display:flex;gap:10px}
+.opt .k{color:var(--mut);font-weight:700;min-width:1.2em}
+.opt.ok{border-color:var(--ok);background:var(--okbg)}
+.opt.ko{border-color:var(--ko);background:var(--kobg)}
+.fb{margin-top:14px;padding:12px 14px;border-radius:10px;border:1px solid var(--bd)}
+.fb.ok{background:var(--okbg);border-color:var(--ok)}
+.fb.ko{background:var(--kobg);border-color:var(--ko)}
+.fb.wa{background:var(--wabg);border-color:var(--wa)}
+.fb b.t{display:block;margin-bottom:2px}
+.exp{color:var(--mut);font-size:.92rem;margin-top:6px}
+textarea{width:100%;min-height:90px;font:inherit;padding:10px;border-radius:10px;border:1px solid var(--bd);background:var(--card);color:var(--tx)}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px}
+.stat{border:1px solid var(--bd);border-radius:12px;padding:10px 12px}
+.stat b{font-size:1.4rem;display:block}.stat span{color:var(--mut);font-size:.82rem}
+.miss{border-top:1px solid var(--bd);padding:10px 0;font-size:.95rem}
+.miss:first-child{border-top:0}.miss small{color:var(--mut)}
+.right{margin-left:auto}
+.hint{color:var(--mut);font-size:.8rem;margin-top:10px}
+a{color:var(--pri)}
+</style>
+</head>
+<body>
+<div class="wrap" id="app"></div>
+<script>
+// Banco de questões — Cap. 3 "Métodos e técnicas em ergonomia" (Iida, Ergonomia: Projeto e Produção)
+// c = completar (___ = lacuna; respostas aceitas separadas por |)
+// m = múltipla escolha | v = verdadeiro/falso | o = pergunta aberta (autoavaliação)
+const T = {
+  met: "Métodos e técnicas",
+  qst: "Questionário",
+  ent: "Entrevista e grupo de foco",
+  obs: "Observação direta",
+  psi: "Técnicas psicofísicas",
+  chk: "Checklists",
+  pos: "RULA, OWAS e REBA",
+  ocr: "OCRA, NIOSH e NASA-TLX",
+  fis: "Avaliações fisiológicas",
+  cog: "Análise cognitiva e usabilidade",
+  prd: "Desenvolvimento de produto",
+  aet: "Análise ergonômica e AET",
+};
+const c = (topic, text, answers, exp = "") => ({ type: "c", topic, text, answers: answers.map(a => a.split("|")), exp });
+const m = (topic, q, correct, wrong, exp = "") => ({ type: "m", topic, q, correct, wrong, exp });
+const v = (topic, q, ans, exp = "") => ({ type: "v", topic, q, ans, exp });
+const o = (topic, q, model) => ({ type: "o", topic, q, model });
+
+const QUESTIONS = [
+// ───────────── MÉTODOS E TÉCNICAS (3.1) ─────────────
+c(T.met, "Os(as) ___ são operações, ações ou modos de executar uma atividade e são hierarquicamente inferiores ao método.", ["técnicas|tecnicas"]),
+c(T.met, "O ___ é mais amplo que a técnica e pode ser composto de várias técnicas.", ["método|metodo"]),
+c(T.met, "A ergonomia é uma ciência ___ de natureza interdisciplinar.", ["aplicada"]),
+c(T.met, "As três grandes áreas da ergonomia são a ergonomia ___, a ergonomia cognitiva e a ergonomia organizacional.", ["física|fisica"]),
+c(T.met, "A ergonomia utiliza métodos e técnicas das ciências naturais, das humanas e das ___.", ["sociais"]),
+c(T.met, "Técnicas de análises estatísticas só podem ser aplicadas quando todos os dados já estiverem ___.", ["coletados|coletadas|levantados|obtidos"]),
+c(T.met, "A escolha de métodos e técnicas depende da natureza da pesquisa, do objetivo pretendido, dos ___ e tempo disponíveis e da habilidade e experiência do pesquisador.", ["recursos"]),
+c(T.met, "Cada profissional (médico, engenheiro, psicólogo, designer) tende a ver o problema segundo seu viés profissional, gerando ___.", ["subotimizações|subotimizacoes|suboptimizações"]),
+c(T.met, "Para a solução final não ficar 'torta', o problema deve ser definido com clareza e deve haver uma ___ eficaz.", ["coordenação|coordenacao"]),
+c(T.met, "A ergonomia ___ trata da interação humano-computador.", ["cognitiva"]),
+c(T.met, "A ergonomia ___ trata da organização do trabalho.", ["organizacional"]),
+c(T.met, "Em um sistema humano-máquina-ambiente, o ambiente pode incluir também os aspectos ___, com estudos de grupos ou organizações produtivas.", ["sociais"]),
+m(T.met, "Qual a relação correta entre método e técnica?", "O método é mais amplo e pode reunir várias técnicas", ["A técnica é mais ampla e reúne vários métodos", "Método e técnica são sinônimos", "A técnica define os objetivos e o método apenas executa"]),
+m(T.met, "A ergonomia física abrange principalmente:", "Fatores ambientais, máquinas, ferramentas e postos de trabalho", ["Interação humano-computador", "Organização do trabalho", "Processos de tomada de decisão"]),
+m(T.met, "Qual das opções NÃO é citada como técnica de coleta de dados para verificar a satisfação do consumidor com um novo produto?", "Análise estatística", ["Observação", "Questionários escritos", "Grupo de foco"], "A análise estatística é aplicada depois, quando os dados já foram coletados."),
+m(T.met, "Por que a escolha de métodos na ergonomia tem uma dificuldade adicional?", "Pela sua natureza interdisciplinar, cada profissional vê o problema pelo seu viés", ["Porque existem poucos métodos disponíveis", "Porque os métodos são sempre muito baratos", "Porque a ergonomia não usa ciências humanas"]),
+v(T.met, "A mesma técnica pode ser utilizada em vários tipos de métodos.", true),
+v(T.met, "Em princípio, existe um método ótimo para cada tipo de problema.", false, "Não se pode afirmar que haja método ótimo, devido às condições limitantes da prática."),
+v(T.met, "Um método considerado ótimo pode se mostrar inviável por falta de recursos ou inabilidade dos pesquisadores.", true),
+v(T.met, "Um método subótimo pode produzir resultados mais interessantes do que um ótimo inviável na prática.", true),
+v(T.met, "Entrevistar consumidores é mais barato e rápido do que aplicar questionários online.", false, "Entrevistas exigem treinar equipe e são demoradas; questionários online têm custo reduzido, mas podem prejudicar a qualidade das informações."),
+v(T.met, "Alguns métodos são mais detalhados, mas exigem mais habilidade, tempo e dinheiro.", true),
+
+// ───────────── QUESTIONÁRIO ─────────────
+c(T.qst, "Em questões de opinião, deve-se colocar a opção 'nenhuma das respostas anteriores', pois cerca de ___% a 30% das pessoas costumam assinalá-la.", ["10|dez"]),
+c(T.qst, "Para variáveis contínuas, pode-se colocar uma escala para medir a ___ de um fator.", ["intensidade"]),
+c(T.qst, "Em respostas dicotômicas, as pessoas tendem a responder '___' ou 'Concordo'.", ["sim"]),
+c(T.qst, "Com número ímpar de opções, as pessoas tendem a marcar a central: é a tendência ___.", ["central"]),
+c(T.qst, "Alguns autores recomendam colocar um número ___ de opções para evitar a tendência central.", ["par"]),
+c(T.qst, "O questionário deve ser validado com uma pequena amostra de ___ a ___ pessoas, representativa do público-alvo.", ["dez|10", "trinta|30"]),
+c(T.qst, "O teste de validação do questionário também serve para verificar o uso de ___ adequado.", ["vocabulário|vocabulario"]),
+c(T.qst, "O efeito ___ distorce as respostas porque as pessoas valorizam fatos recentes ou que provocaram maiores emoções, generalizando a situação.", ["halo"]),
+c(T.qst, "O efeito halo manifesta-se com mais facilidade quando a pergunta é genérica ou ___.", ["subjetiva"]),
+c(T.qst, "O efeito halo pode ser contornado colocando perguntas mais ___ relacionadas ao tema.", ["objetivas"]),
+c(T.qst, "Na escala linear da Figura 3.3, os extremos são 'Péssimo' e '___'.", ["excelente"]),
+c(T.qst, "O questionário deve ser elaborado em duas ou mais ___, sendo o modelo inicial submetido a um teste de validação.", ["etapas|fases"]),
+m(T.qst, "No exemplo do efeito halo, qual carro tende a ser pior avaliado?", "O carro B, que raramente exigia manutenção, mas falhou em situação desagradável", ["O carro A, que exigia manutenção constante", "Os dois igualmente", "Nenhum dos dois"], "A falha do carro B ocorreu numa estrada deserta, à noite, com chuva e crianças chorando — a situação desagradável é generalizada."),
+m(T.qst, "Qual pergunta ajudaria a contornar o efeito halo no exemplo dos carros?", "Quantas vezes o carro A e o carro B exigiram manutenções no ano passado?", ["Qual carro você prefere?", "Qual marca é a melhor?", "Você recomendaria o carro B?"]),
+m(T.qst, "Por que formular opções que exijam interpretação e raciocínio, em vez de apenas Sim/Não?", "Porque respostas dicotômicas tendem a 'Sim' ou 'Concordo'", ["Porque Sim/Não é difícil de tabular", "Porque exige menos tempo do respondente", "Porque elimina a necessidade de validação"]),
+m(T.qst, "Qual é uma vantagem do questionário (Tabela 3.1)?", "Economia de tempo e de custo", ["Grande flexibilidade", "Profundidade das respostas", "Possibilidade de redirecionar a conversa"]),
+m(T.qst, "Qual é uma desvantagem do questionário (Tabela 3.1)?", "Pouca flexibilidade e superficialidade", ["Tempo longo de aplicação", "Depende da habilidade do líder", "Influência do observador"]),
+v(T.qst, "A opção 'nenhuma das respostas anteriores' é pior que forçar o respondente a escolher outra resposta.", false, "Ela é melhor que forçar uma resposta; deve ser codificada."),
+v(T.qst, "O questionário deve ser reproduzido em grande quantidade antes de passar pelo teste de validação.", false),
+v(T.qst, "O efeito halo ocorre mais facilmente com perguntas objetivas.", false, "Ocorre mais com perguntas genéricas ou subjetivas."),
+v(T.qst, "No exemplo dos carros, o carro A gastou em cinco anos o equivalente a 10% do seu valor com manutenção.", true, "2% ao ano × 5 anos."),
+v(T.qst, "O questionário permite preenchimento online e grande número de sujeitos.", true),
+
+// ───────────── ENTREVISTA E GRUPO DE FOCO ─────────────
+c(T.ent, "Entrevista é um tipo de conversa ___ com certos objetivos.", ["dirigida"]),
+c(T.ent, "Na entrevista informal não há ___ previamente elaborado.", ["roteiro"]),
+c(T.ent, "Na entrevista ___, existem perguntas prévias, mas elas podem ser alteradas durante a entrevista de acordo com as respostas obtidas.", ["semiestruturada|semi-estruturada|semi estruturada"]),
+c(T.ent, "Na entrevista ___, segue-se uma sequência de perguntas previamente elaboradas.", ["estruturada"]),
+c(T.ent, "Uma entrevista geralmente abrange ___ fases (Robson, 1993).", ["cinco|5"]),
+c(T.ent, "Na fase de ___, inicia-se com perguntas fáceis, para posicionar-se sobre o assunto e reduzir o estresse.", ["degelo"]),
+c(T.ent, "No conteúdo principal, as questões de natureza mais ___ ficam para o final.", ["polêmica|polemica|polêmicas|polemicas"]),
+c(T.ent, "As questões devem ser ordenadas do ___ para o complexo.", ["simples"]),
+c(T.ent, "A maior vantagem das entrevistas é a flexibilidade e a ___.", ["adaptabilidade"]),
+c(T.ent, "A principal desvantagem da entrevista é a ___.", ["demora|lentidão|lentidao"]),
+c(T.ent, "É difícil conseguir resultados interessantes antes dos ___ minutos e entrevistas acima de uma ___ tornam-se pouco produtivas.", ["trinta|30", "hora|1 hora|uma hora"]),
+c(T.ent, "Cada hora de gravação exige aproximadamente ___ horas para transcrição.", ["dez|10"]),
+c(T.ent, "O entrevistador deve ouvir mais e ___ menos.", ["falar"]),
+c(T.ent, "Ao entrevistar um trabalhador da construção civil, deve-se perguntar se a ferramenta '___', em vez de 'provoca lesões'.", ["machuca"]),
+c(T.ent, "O método ___ consulta um grupo de especialistas em várias rodadas sucessivas, até que se alcance algum tipo de consenso.", ["delphi"]),
+c(T.ent, "O grupo de foco (focus group) é uma entrevista coletiva realizada com ___ a ___ pessoas.", ["seis|6", "dez|10"]),
+c(T.ent, "A técnica do grupo de foco foi desenvolvida na área de ___.", ["marketing"]),
+c(T.ent, "Em ergonomia, o grupo de foco é usado principalmente na ___.", ["macroergonomia"]),
+c(T.ent, "A maior vantagem do grupo de foco está na neutralização da influência do ___.", ["entrevistador"]),
+c(T.ent, "O coordenador do grupo de foco deve conhecer os objetivos, mas manter-se ___.", ["neutro"]),
+m(T.ent, "Qual é a ordem correta das fases da entrevista?", "Introdução, degelo, conteúdo principal, finalização, fechamento", ["Degelo, introdução, conteúdo principal, fechamento, finalização", "Introdução, conteúdo principal, degelo, finalização, fechamento", "Conteúdo principal, introdução, degelo, fechamento, finalização"]),
+m(T.ent, "Por que as questões polêmicas ficam para o final do conteúdo principal?", "Se o entrevistado se recusar a prosseguir, perdem-se menos informações", ["Para estressar o entrevistado", "Porque são as mais fáceis", "Para encurtar a entrevista"]),
+m(T.ent, "Qual das perguntas abaixo é tendenciosa?", "Você não acha que os capacetes são incômodos?", ["Como você avalia o conforto do capacete?", "O capacete incomoda em algum momento?", "O que você acha do capacete?"]),
+m(T.ent, "Na fase de fechamento da entrevista, o entrevistador:", "Explica como o conteúdo será utilizado, se haverá retorno, e agradece", ["Faz as perguntas mais polêmicas", "Apresenta-se e pede permissão para gravar", "Faz perguntas fáceis para reduzir o estresse"]),
+m(T.ent, "Na fase de introdução, o entrevistador:", "Apresenta-se, fala dos objetivos, pede permissão para gravar e garante confidencialidade", ["Inicia com perguntas fáceis", "Explica como o conteúdo será usado", "Faz perguntas diretas para reforçar"]),
+m(T.ent, "Qual é um exemplo de aplicação de entrevista com múltiplos pontos de vista?", "Entrevistar o operador, seu supervisor imediato e o dirigente da empresa sobre o mesmo problema", ["Entrevistar apenas o operador em três ocasiões", "Entrevistar três operadores sobre problemas diferentes", "Entrevistar somente o gerente"]),
+m(T.ent, "Qual é uma vantagem do grupo de foco (Tabela 3.1)?", "Sinergia do grupo, baixo custo e tempo curto", ["Facilidade de compilação numérica", "Realismo da pesquisa", "Independe da habilidade do líder"]),
+m(T.ent, "Qual é uma desvantagem do grupo de foco?", "Depende da habilidade do líder e é difícil sintetizar as respostas", ["Custo elevado", "Tempo longo", "Influência do observador"]),
+m(T.ent, "O grupo de foco é particularmente útil:", "Nas etapas iniciais e intermediárias de um projeto", ["Apenas após o protótipo estar pronto", "Somente na fase de produção", "Apenas para coleta de dados quantitativos"]),
+m(T.ent, "O método Delphi pode ser aplicado, por exemplo, para:", "Consultar trabalhadores, supervisores e gerentes sobre prioridades de melhoria das condições de trabalho", ["Medir a frequência cardíaca", "Observar posturas com filmagem", "Calcular o limite de peso recomendado"]),
+v(T.ent, "O entrevistador deve emitir opiniões próprias para deixar o entrevistado à vontade.", false, "Deve ouvir mais, falar menos e manter posição neutra."),
+v(T.ent, "Perguntas longas ou complexas podem ser desdobradas.", true),
+v(T.ent, "Entrevistas gravadas exigem consentimento prévio do entrevistado.", true),
+v(T.ent, "O grupo de foco pode ser usado somente nas etapas finais do projeto.", false),
+v(T.ent, "Os participantes do grupo de foco devem ser representativos do público-alvo e dispostos a colaborar.", true),
+v(T.ent, "A entrevista pela internet pode ser interessante para coletar informações detalhadas sobre determinados assuntos.", true),
+v(T.ent, "É recomendável dar tratamentos diferenciados aos entrevistados para deixá-los mais confortáveis.", false, "Deve-se manter as mesmas condições para todos."),
+
+// ───────────── OBSERVAÇÃO DIRETA ─────────────
+c(T.obs, "A técnica de observação direta consiste em observar aquilo que as pessoas ___ e registrar de alguma forma.", ["fazem"]),
+c(T.obs, "Historicamente, a observação foi aplicada em biologia, etologia e psicologia ___ para estudar comportamento de seres não humanos.", ["experimental"]),
+c(T.obs, "Para que as informações sejam confiáveis, devem apresentar ___ ao longo do tempo.", ["estabilidade|constância|constancia"]),
+c(T.obs, "A principal vantagem da observação direta é o seu ___.", ["realismo"]),
+c(T.obs, "Diferente de entrevistas e questionários, a observação direta evita que as pessoas 'falem uma coisa e façam outra' — por isso tem mais ___.", ["realismo"]),
+c(T.obs, "A primeira desvantagem da observação direta é o efeito provocado pela ___ do observador, semelhante ao efeito Hawthorne.", ["presença|presenca"]),
+c(T.obs, "Duas formas de reduzir o efeito do observador: a mínima ___ e o hábito.", ["interação|interacao"]),
+c(T.obs, "A segunda desvantagem da observação direta é o ___ gasto.", ["tempo"]),
+c(T.obs, "Recomenda-se desprezar as ___ observações, até se atingir um 'regime normal'.", ["primeiras"]),
+c(T.obs, "Na observação ___, o observador tem grande liberdade para escolher as informações e a maneira de registrá-las.", ["informal"]),
+c(T.obs, "A observação ___ envolve trabalho prévio de seleção, classificação e descrição dos eventos a serem observados.", ["formal"]),
+c(T.obs, "A observação formal tem a vantagem da objetividade, mas apresenta maior ___ em relação à informal.", ["rigidez"]),
+c(T.obs, "A observação ___ é feita sem interrupção durante certo intervalo de tempo.", ["contínua|continua"]),
+c(T.obs, "Na observação por ___, os intervalos entre dois registros consecutivos variam aleatoriamente.", ["amostragem"]),
+c(T.obs, "A aleatoriedade na observação por amostragem é obtida com tabelas de números ao ___.", ["acaso"]),
+c(T.obs, "A observação contínua é análoga a uma cena filmada em vídeo; a amostragem é análoga a vários ___ instantâneos.", ["flashes|flash"]),
+m(T.obs, "A observação contínua é muito utilizada em:", "Trabalhos repetitivos de ciclos curtos, onde se conta o número de ações", ["Fenômenos raros como festas anuais", "Contagem de pessoas em fila", "Avaliações fisiológicas"]),
+m(T.obs, "O que torna a observação direta demorada em certos casos?", "Fenômenos de baixa frequência exigem longos períodos de observação", ["A necessidade de transcrição de gravações", "A elaboração do questionário", "A validação com 10 a 30 pessoas"]),
+m(T.obs, "Qual vantagem tem a observação informal?", "Flexibilidade para o observador experiente ajustar seu percurso", ["Objetividade e facilidade de análise", "Categorias prévias de eventos", "Ausência de efeito do observador"]),
+m(T.obs, "Qual desvantagem tem a observação informal?", "Dificuldade posterior para organizar, analisar e tirar conclusões", ["Rigidez excessiva", "Impossibilidade de fazer anotações", "Alto custo de equipamentos"]),
+m(T.obs, "Na observação por amostragem aplicada ao desconforto de uma cadeira, o observador verifica nos horários sorteados:", "Se a pessoa ainda permanece na mesma postura ou se mudou", ["A frequência cardíaca da pessoa", "O peso levantado", "A opinião da pessoa sobre a cadeira"]),
+v(T.obs, "A observação direta não sofre influência do observador.", false),
+v(T.obs, "A observação formal costuma ser precedida de uma fase informal para selecionar as categorias de ações.", true),
+v(T.obs, "A observação por amostragem pode ser aplicada a um grupo de pessoas, como na contagem de pessoas em uma fila.", true),
+v(T.obs, "Na observação por amostragem, os horários de observação são definidos previamente de forma aleatória.", true),
+v(T.obs, "Manual escrito de procedimentos ajuda a garantir constância dos procedimentos humanos de observação.", true),
+
+// ───────────── TÉCNICAS PSICOFÍSICAS ─────────────
+c(T.psi, "As técnicas de ergonomia física baseiam-se em antropometria, fisiologia/metabolismo e ___.", ["biomecânica|biomecanica"]),
+c(T.psi, "As técnicas de ergonomia física podem ser qualitativas, semiquantitativas ou ___.", ["quantitativas"]),
+c(T.psi, "Desconforto e dor são indícios de distúrbios osteomusculares relacionados ao trabalho, as ___.", ["DORT|DORTs"]),
+c(T.psi, "A Escala de ___ (1970) foi criada pelo fisiologista sueco Gunnar ___ para classificar a percepção subjetiva do esforço.", ["Borg", "Borg"]),
+c(T.psi, "A escala de Borg original ia de 6 a 20 pontos, variando proporcionalmente à frequência cardíaca de 60 a ___ bpm.", ["200"]),
+c(T.psi, "A escala de Borg foi ajustada para variar de 0 a ___, abrangendo 12 intensidades de esforço.", ["10|dez"]),
+c(T.psi, "O diagrama de áreas dolorosas foi proposto por Corlett e ___ (1980).", ["Manenica"]),
+c(T.psi, "No diagrama de áreas dolorosas, o corpo é visto pela vista ___ e dividido em doze segmentos simétricos.", ["dorsal"]),
+c(T.psi, "O desconforto no diagrama é avaliado em ___ níveis, do 0 (sem problema) ao 5 (insuportável).", ["seis|6"]),
+c(T.psi, "No diagrama de áreas dolorosas, os níveis ___ e 5 merecem atenção imediata.", ["4|quatro"]),
+c(T.psi, "O analista aplica o diagrama de áreas dolorosas ao ___ de um período de trabalho.", ["final|fim"]),
+c(T.psi, "O questionário ___ (Kuorinka et al., 1987) foi desenvolvido para autopreenchimento e divide o corpo em ___ partes.", ["nórdico|nordico", "nove|9"]),
+c(T.psi, "No questionário nórdico, avalia-se problema nos últimos ___ dias e nos últimos ___ meses.", ["7|sete", "12|doze"]),
+c(T.psi, "O preenchimento do questionário nórdico leva de 2 a 9 min, com média de ___ min.", ["4|quatro"]),
+c(T.psi, "O questionário nórdico estende o prazo de ocorrência dos problemas aos últimos doze meses, enquanto os outros métodos realizam '___' instantâneas.", ["fotografias"]),
+m(T.psi, "O que significa o nível 6 na escala de Borg (0 a 10)?", "Medianamente intenso, suportável", ["Moderado", "Muito intenso, muito cansativo", "Pouco intenso"]),
+m(T.psi, "O nível 3 da escala de Borg 0–10 corresponde a:", "Moderado", ["Muito leve", "Pouco intenso", "Medianamente leve"]),
+m(T.psi, "O nível 10 da escala de Borg corresponde a:", "Exaustivo, insuportável", ["Extremamente intenso, exaustivo", "Muito intenso, muito cansativo", "Nenhum esforço, repouso"]),
+m(T.psi, "O nível 0,5 da escala de Borg é:", "Extremamente leve", ["Muito leve", "Nenhum esforço", "Medianamente leve"]),
+m(T.psi, "Qual vantagem do diagrama de áreas dolorosas?", "Mapeamento fácil, rápido e barato para toda a empresa, com autopreenchimento", ["Mede a frequência cardíaca", "Calcula o peso máximo recomendado", "Substitui qualquer análise posterior"]),
+m(T.psi, "Qual das três perguntas NÃO faz parte do questionário nórdico?", "Você sentiu dor ao levantar carga nas últimas 24 horas?", ["Teve algum problema nos últimos 7 dias?", "Teve algum problema nos últimos 12 meses?", "Deixou de trabalhar algum dia nos últimos 12 meses devido ao problema?"]),
+m(T.psi, "A discrepância encontrada ao reaplicar o questionário nórdico (44 pessoas) foi de 12%, 4% e 16%. Isso foi considerado:", "Aceitável, dada a subjetividade e falhas de memória", ["Inaceitável, invalidando o questionário", "Irrelevante porque a amostra era pequena", "Prova de que o questionário não serve para levantamentos"]),
+m(T.psi, "O questionário nórdico é especialmente útil para:", "Levantamento abrangente, rápido e de baixo custo, indicando situações para análise mais profunda", ["Calcular risco com precisão semiquantitativa", "Medir gasto energético", "Avaliar carga mental"]),
+v(T.psi, "O desconforto e a dor são o primeiro sinal de alerta de que o trabalho precisa ser revisto.", true),
+v(T.psi, "A escala de Borg avalia a percepção subjetiva do esforço.", true),
+v(T.psi, "O diagrama de áreas dolorosas divide o corpo em nove partes.", false, "São doze segmentos corporais simétricos; as nove partes são do questionário nórdico."),
+v(T.psi, "No questionário nórdico, a resposta 'Sim' indica incômodos, desconfortos ou dores naquela parte do corpo.", true),
+v(T.psi, "O questionário nórdico é respondido apenas pelo analista.", false, "É de autopreenchimento pelos trabalhadores."),
+v(T.psi, "O questionário nórdico pode incluir caracterização do sujeito: sexo, idade, lateralidade e cargo.", true),
+
+// ───────────── CHECKLISTS ─────────────
+c(T.chk, "Checklist é basicamente um ___ com itens importantes para um diagnóstico rápido de uma situação.", ["questionário|questionario"]),
+c(T.chk, "O checklist objetiva reduzir esquecimentos, omissões, erros e prevenir ___.", ["riscos"]),
+c(T.chk, "As respostas do checklist geralmente são ___, como sim/não, existe/inexiste.", ["dicotômicas|dicotomicas"]),
+c(T.chk, "O checklist é muito aplicado nos serviços de manutenção, no setor de segurança e na ___.", ["aviação|aviacao"]),
+c(T.chk, "O PLIBEL (Kemmlert, 1995) tem ___ questões sobre fatores de risco osteomusculares e dez sobre fatores ambientais e organizacionais.", ["34|trinta e quatro"]),
+c(T.chk, "No PLIBEL, o escore final é dado pela quantidade de '___': quanto mais, maior o risco.", ["sim"]),
+c(T.chk, "O checklist de Keyserling avalia postura do corpo/pernas (7 condições), tronco (4 condições) e ___ (4 condições).", ["pescoço|pescoco"]),
+c(T.chk, "No checklist de Keyserling, qualquer trabalho com uma ou mais marcas (*) — superior a ___ do ciclo — tem alta prioridade de análise.", ["1/3|um terço|um terco"]),
+c(T.chk, "O checklist de ___ (1992) foi desenvolvido para avaliar o grau de fadiga, assumindo que músculos mais fatigados têm maior risco de DORT.", ["Rodgers"]),
+c(T.chk, "O checklist de Rodgers avalia três fatores de esforço: grau, ___ e frequência.", ["duração|duracao"]),
+c(T.chk, "No checklist de Rodgers, a sequência 111 indica baixa probabilidade de DORT, enquanto a sequência ___ indica alta probabilidade e avaliação prioritária.", ["343"]),
+c(T.chk, "O Quick Exposure Checklist (QEC) foi desenvolvido pela Universidade de ___, na Inglaterra.", ["Surrey"]),
+c(T.chk, "No QEC, o nível de exposição é categorizado como baixo, moderado, alto e ___.", ["muito alto"]),
+c(T.chk, "O checklist de ___ (Lifshitz e Armstrong, 1986) avalia riscos de DORT nos membros superiores e contém 21 questões.", ["Michigan"]),
+c(T.chk, "O ___ Index (Moore e Garg, 1995) avalia o risco de DORT nos segmentos distais: braço, cotovelo, pulso e mão.", ["Strain"]),
+c(T.chk, "No Strain Index, o resultado final é fruto da ___ dos seis fatores.", ["multiplicação|multiplicacao"]),
+c(T.chk, "No Strain Index, SI menor que ___ indica trabalho provavelmente seguro.", ["3|três|tres"]),
+c(T.chk, "No Strain Index, SI igual ou maior que ___ indica trabalho provavelmente de risco.", ["7|sete"]),
+c(T.chk, "O Kodak Ergonomics Checklist – Material Handling foi proposto pela The Eastman ___ Company (2003).", ["Kodak"]),
+c(T.chk, "O checklist NIOSH para manuseio de carga (MMH) tem ___ quesitos com respostas sim/não.", ["18|dezoito"]),
+c(T.chk, "No MMH do NIOSH, respostas '___' indicam risco e precisam ser investigadas.", ["não|nao"]),
+c(T.chk, "O Hazard Evaluation Checklist for Lifting, Carrying, Pushing or Pulling tem nove quesitos gerais e ___ específicos.", ["cinco|5"]),
+m(T.chk, "O PLIBEL tem como característica:", "Pode ser preenchido pelos próprios trabalhadores", ["É aplicado somente por especialistas", "Calcula o limite de peso recomendado", "Avalia apenas membros inferiores"]),
+m(T.chk, "O checklist de Keyserling avalia cada condição em função de:", "Tempo de duração na jornada/ciclo: nunca, às vezes ou mais de 1/3", ["Frequência cardíaca", "Peso da carga em kg", "Ângulo de assimetria"]),
+m(T.chk, "O checklist de Rodgers é aplicado em:", "Atividades mais difíceis ou mais duradouras da jornada", ["Todas as atividades, igualmente", "Somente atividades noturnas", "Somente atividades de escritório"]),
+m(T.chk, "No QEC, quem faz a avaliação?", "Trabalhadores e analistas", ["Apenas o analista", "Apenas o trabalhador", "Apenas o médico do trabalho"]),
+m(T.chk, "No QEC, os trabalhadores avaliam, entre outros:", "Carga manuseada, duração das tarefas, força, demanda visual e nível de estresse", ["Postura das costas e ombros", "Ângulo do pulso", "Posição do pescoço"]),
+m(T.chk, "No QEC, os analistas avaliam:", "Posturas de costas, ombros/braços, punhos/mãos e pescoço", ["Dificuldade de acompanhar o ritmo", "Uso de ferramentas vibratórias", "Nível de estresse"]),
+m(T.chk, "O Strain Index tem quantos fatores avaliados e quantos níveis cada um?", "Seis fatores com cinco níveis", ["Cinco fatores com seis níveis", "Seis fatores com quatro níveis", "Quatro fatores com três níveis"]),
+m(T.chk, "Qual não é um dos fatores do Strain Index?", "Temperatura ambiente", ["Intensidade de força", "Duração do esforço", "Velocidade de trabalho"]),
+m(T.chk, "Strain Index entre 3 e 7 significa:", "O trabalho pode ter risco", ["Trabalho provavelmente seguro", "Trabalho provavelmente de risco", "Risco inexistente"]),
+m(T.chk, "O Checklist de Michigan avalia:", "Riscos de DORT nos membros superiores", ["Corpo inteiro em tarefas de levantamento", "Carga mental", "Fadiga em todos os músculos"]),
+m(T.chk, "Qual desses checklists foi criado especificamente para avaliar fadiga muscular?", "Checklist de Rodgers", ["PLIBEL", "Kodak", "Michigan"]),
+v(T.chk, "No PLIBEL, quanto mais 'sim', maior o risco.", true),
+v(T.chk, "No checklist de Michigan, quanto mais 'não', maior o risco.", true, "No texto do capítulo: 'Quanto mais não, maior o risco'."),
+v(T.chk, "No Hazard Evaluation Checklist for Lifting, quanto mais 'sim', maior o risco.", true),
+v(T.chk, "No MMH do NIOSH, respostas 'sim' indicam risco.", false, "No MMH, as respostas 'não' indicam risco."),
+v(T.chk, "O Strain Index foca o corpo inteiro.", false, "Foca os segmentos distais: braço, cotovelo, pulso e mão."),
+v(T.chk, "No Kodak Ergonomics Checklist o analista coloca um 'X' se considerar o quesito um problema a ser analisado.", true),
+v(T.chk, "Os pilotos usam checklist antes da decolagem e da aterrissagem.", true),
+
+// ───────────── RULA, OWAS e REBA ─────────────
+c(T.pos, "O RULA (Rapid Upper-Limb Assessment) foi desenvolvido por McAtamney e Corlett (1993) para avaliar o trabalho de ___.", ["digitadores"]),
+c(T.pos, "O RULA foca a sobrecarga nos membros ___.", ["superiores"]),
+c(T.pos, "O RULA avalia o trabalho muscular ___ e as forças exercidas pelos segmentos corporais.", ["estático|estatico"]),
+c(T.pos, "No RULA, o Grupo ___ avalia os membros superiores (braço, antebraço e mão).", ["A"]),
+c(T.pos, "No RULA, o Grupo ___ avalia pescoço, tronco e pernas.", ["B"]),
+c(T.pos, "Os escores finais dos Grupos A e B do RULA são cruzados no ábaco da Tabela ___.", ["C"]),
+c(T.pos, "O RULA tem ___ passos de pontuação, divididos em dois grupos.", ["15|quinze"]),
+c(T.pos, "O RULA recomenda ___ níveis de ação.", ["quatro|4"]),
+c(T.pos, "No RULA, pontuação igual ou superior a 7 (nível 4) exige investigar e tomar providências ___.", ["imediatas|imediata"]),
+c(T.pos, "O OWAS (Ovako Working Posture Analysing System) foi desenvolvido por três pesquisadores ___ (Karhu, Kansi e Kuorinka, 1977).", ["finlandeses"]),
+c(T.pos, "O OWAS foi criado em uma empresa ___, onde havia muitas condições desfavoráveis de trabalho pesado.", ["siderúrgica|siderurgica"]),
+c(T.pos, "No OWAS foram encontradas ___ posturas típicas.", ["72|setenta e duas"]),
+c(T.pos, "No OWAS, a postura é descrita por um código de ___ dígitos.", ["seis|6"]),
+c(T.pos, "No OWAS, os quatro dígitos iniciais classificam dorso, braços, pernas e ___.", ["carga|força|forca|carga/força"]),
+c(T.pos, "No OWAS, o dorso tem 4 posições, os braços ___ posições, as pernas 7 posições e a carga 3 categorias.", ["3|três|tres"]),
+c(T.pos, "O OWAS resulta em ___ combinações de posturas (4×3×7×3).", ["252"]),
+c(T.pos, "O OWAS se baseia em observações das posturas a intervalos predefinidos, em geral a cada ___ segundos.", ["30|trinta"]),
+c(T.pos, "O OWAS assume que sejam feitas no mínimo ___ observações.", ["100|cem"]),
+c(T.pos, "O OWAS foi testado com mais de 36.340 observações em ___ tarefas típicas da indústria siderúrgica.", ["52"]),
+c(T.pos, "Analistas treinados observando o mesmo trabalho fizeram registros com ___% de concordância, em média, no OWAS.", ["93"]),
+c(T.pos, "As posturas OWAS foram avaliadas quanto ao desconforto usando um ___ que podia ser colocado nas diversas posturas.", ["manequim"]),
+c(T.pos, "No OWAS, posturas são classificadas em ___ classes de ação, de acordo com a necessidade de intervenção.", ["quatro|4"]),
+c(T.pos, "OWAS Classe 4: postura que deve merecer atenção ___.", ["imediata"]),
+c(T.pos, "O REBA (Rapid Entire Body Assessment) foi desenvolvido por Hignett e McAtamney (2000) como uma ___ do RULA.", ["evolução|evolucao"]),
+c(T.pos, "O REBA avalia posturas de todo o corpo de prestadores de ___.", ["serviços|servicos"]),
+c(T.pos, "O REBA gera uma pontuação global que remete a ___ níveis de risco e de ação.", ["cinco|5"]),
+c(T.pos, "No REBA, pontuação 1 corresponde a risco ___.", ["inexistente"]),
+c(T.pos, "No REBA, pontuação entre 11 e 15 é risco ___ e requer providências imediatas.", ["muito alto"]),
+c(T.pos, "A aplicação informatizada de OWAS, RULA e REBA ocorre em ___ estágios.", ["seis|6"]),
+m(T.pos, "Níveis de ação do RULA: pontuação 3 ou 4 significa:", "Necessárias investigações a médio prazo", ["Postura aceitável", "Providências imediatas", "Providências a curto prazo"]),
+m(T.pos, "Nível 3 do RULA (pontuação 5 ou 6):", "Investigar e tomar providências a curto prazo", ["Investigar a médio prazo", "Postura aceitável", "Providências imediatas"]),
+m(T.pos, "Nível 1 do RULA (pontuação 1 ou 2):", "Postura aceitável, sem necessidade de investigações", ["Providências imediatas", "Investigações a médio prazo", "Providências a curto prazo"]),
+m(T.pos, "No RULA, o escore final do Grupo A é obtido somando o valor da Tabela A com:", "Contração muscular e força/carga", ["Pescoço e tronco", "Frequência de movimentos e vibração", "Ângulo de assimetria e qualidade da pega"]),
+m(T.pos, "As categorias do OWAS, quanto à classe, são:", "Classe 1: dispensa cuidados; Classe 4: atenção imediata", ["Classe 1: atenção imediata; Classe 4: normal", "Todas exigem atenção imediata", "Classe 2: atenção imediata"]),
+m(T.pos, "OWAS Classe 2 significa:", "Postura que deve ser verificada na próxima revisão rotineira dos métodos de trabalho", ["Postura normal que dispensa cuidados", "Postura que merece atenção a curto prazo", "Postura que merece atenção imediata"]),
+m(T.pos, "OWAS Classe 3 significa:", "Postura que deve merecer atenção a curto prazo", ["Postura normal", "Atenção imediata", "Verificar na próxima revisão rotineira"]),
+m(T.pos, "As classes OWAS dependem:", "Do tempo de duração das posturas e da combinação das variáveis (dorso, braços, pernas e carga)", ["Somente da idade do trabalhador", "Do salário do trabalhador", "Apenas da carga em kg"]),
+m(T.pos, "REBA, nível de ação 2 (pontuação 4 a 7):", "Risco médio, providências a médio prazo", ["Risco baixo", "Risco alto, providências a curto prazo", "Risco inexistente"]),
+m(T.pos, "REBA, nível de ação 3 (pontuação 8 a 10):", "Risco alto, providências a curto prazo", ["Risco médio", "Risco muito alto, imediatas", "Risco baixo"]),
+m(T.pos, "REBA, nível de ação 1 (pontuação 2 ou 3):", "Risco baixo, podendo ser necessárias providências futuras", ["Risco inexistente", "Risco médio", "Risco alto"]),
+m(T.pos, "O que o OWAS conseguiu na siderúrgica, segundo o texto?", "Identificou e solucionou problemas pendentes há anos e contribuiu para remodelar linhas de produção", ["Eliminou a necessidade de trabalho pesado", "Substituiu todos os trabalhadores", "Só gerou relatórios sem aplicação"]),
+m(T.pos, "Qual a vantagem dos sistemas informatizados de OWAS, RULA e REBA?", "O software faz os cálculos e gera gráficos de classificação do risco, usando as mesmas tabelas do papel", ["Dispensam a observação da tarefa", "Dispensam o pesquisador", "Usam tabelas completamente diferentes"]),
+v(T.pos, "O REBA foi desenvolvido como evolução do RULA para avaliar o corpo inteiro.", true),
+v(T.pos, "O RULA avalia o corpo inteiro com igual detalhamento.", false, "Foca membros superiores; avaliação menos detalhada do resto do corpo."),
+v(T.pos, "No OWAS, os dois dígitos finais do código indicam o tipo de atividade ou o local/seção da observação.", true),
+v(T.pos, "No OWAS, o mesmo trabalhador observado de manhã e à tarde manteve 86% das posturas registradas.", true),
+v(T.pos, "No OWAS, diferentes trabalhadores executando a mesma tarefa usaram, em média, 93% de posturas semelhantes.", false, "93% foi a concordância entre analistas; entre trabalhadores foi 69%."),
+v(T.pos, "O protocolo RULA e REBA são aplicados para os dois lados do corpo.", true),
+v(T.pos, "As técnicas informatizadas dispensam o pesquisador de definir a estratégia de pesquisa.", false, "Cabe ao pesquisador definir a estratégia, avaliar o trabalho e analisar os resultados."),
+
+// ───────────── OCRA, NIOSH e NASA-TLX ─────────────
+c(T.ocr, "O protocolo OCRA (Occupational Repetitive Action) foi desenvolvido por ___ e Colombini.", ["Occhipinti"]),
+c(T.ocr, "O OCRA tornou-se obrigatório pela norma internacional ISO ___-3 e pela norma europeia EN 1005.", ["11228"]),
+c(T.ocr, "O OCRA avalia a exposição a fatores de risco de DORT nos membros ___, de forma semiquantitativa.", ["superiores"]),
+c(T.ocr, "Primeiro foi desenvolvido o checklist OCRA para avaliação ___, e depois o Índice OCRA.", ["preliminar"]),
+c(T.ocr, "A variável característica do OCRA para movimentos repetitivos são as ações ___.", ["técnicas|tecnicas"]),
+c(T.ocr, "Os fatores de risco do OCRA são repetitividade, força, postura, ausência de períodos de ___ e fatores adicionais.", ["recuperação|recuperacao"]),
+c(T.ocr, "O Índice OCRA é obtido dividindo-se as ações ___ pelas ações recomendadas.", ["observadas|realizadas"]),
+c(T.ocr, "O resultado do OCRA é enquadrado em ___ níveis de risco, identificados por faixas de cores.", ["cinco|5"]),
+c(T.ocr, "No Índice OCRA, a faixa verde (até 2,2) significa que ___ há necessidade de atuação.", ["não|nao"]),
+c(T.ocr, "A equação do NIOSH calcula o peso máximo recomendável em tarefas ___ de levantamento de cargas.", ["repetitivas"]),
+c(T.ocr, "A equação do NIOSH foi desenvolvida em 1981 e revisada em ___.", ["1991"]),
+c(T.ocr, "A equação do NIOSH refere-se à tarefa de apanhar uma carga com as ___ mãos e depositá-la em outro nível.", ["duas"]),
+c(T.ocr, "O valor de referência da equação de NIOSH é ___ kg.", ["23"]),
+c(T.ocr, "O valor de 23 kg é para levantamento a ___ cm do solo, deslocamento vertical de 25 cm e carga a 25 cm do corpo.", ["75"]),
+c(T.ocr, "A carga de 23 kg é aceitável para 99% dos homens e ___% das mulheres.", ["75"]),
+c(T.ocr, "O valor de referência de NIOSH é reduzido por ___ fatores multiplicativos, de valores iguais ou inferiores a 1,0.", ["seis|6"]),
+c(T.ocr, "Na equação de NIOSH, a variável dependente é o ___ (limite de peso recomendado).", ["LPR"]),
+c(T.ocr, "Na equação de NIOSH, H é a distância ___ entre o indivíduo e a carga.", ["horizontal"]),
+c(T.ocr, "Na equação de NIOSH, V é a distância ___ na origem da carga.", ["vertical"]),
+c(T.ocr, "Na equação de NIOSH, D é o deslocamento ___ entre origem e destino.", ["vertical"]),
+c(T.ocr, "Na equação de NIOSH, A é o ângulo de ___ medido a partir do plano sagital.", ["assimetria"]),
+c(T.ocr, "Na equação de NIOSH, F é a frequência média de ___ por minuto.", ["levantamentos"]),
+c(T.ocr, "Na equação de NIOSH, C é a qualidade da ___.", ["pega"]),
+c(T.ocr, "No exemplo do texto, o LPR calculado foi de aproximadamente ___ kg.", ["10,739|10.739|10,7|10.7|10,74|10.74"]),
+c(T.ocr, "O NASA-TLX é uma técnica ___ para avaliação quantitativa da carga de trabalho.", ["multidimensional"]),
+c(T.ocr, "O NASA-TLX baseia-se na média ___ de seis dimensões.", ["ponderada"]),
+c(T.ocr, "No NASA-TLX, o sujeito compara aos pares as seis dimensões, avaliando ___ pares.", ["15|quinze"]),
+c(T.ocr, "No NASA-TLX, cada dimensão pode ser selecionada de nenhuma até no máximo ___ vezes.", ["5|cinco"]),
+c(T.ocr, "Na segunda etapa do NASA-TLX, o sujeito marca a intensidade em uma escala de ___ pontos.", ["vinte|20"]),
+c(T.ocr, "No NASA-TLX, a soma dos valores das seis dimensões é dividida por ___.", ["quinze|15"]),
+m(T.ocr, "Quais são as seis dimensões do NASA-TLX?", "Demanda mental, física, temporal, performance, esforço e frustração", ["Mental, física, temporal, postura, força e repetição", "Esforço, fadiga, dor, estresse, ritmo e vibração", "Demanda visual, auditiva, tátil, performance, esforço e tempo"]),
+m(T.ocr, "O Índice OCRA quantifica o risco comparando:", "O número de ações técnicas diárias realizadas com o número de ações recomendadas", ["A frequência cardíaca com a respiratória", "O peso da carga com 23 kg", "A postura do dorso com a das pernas"]),
+m(T.ocr, "Qual dos itens NÃO é um fator multiplicativo da equação de NIOSH?", "Temperatura ambiente", ["Distância horizontal", "Ângulo de assimetria", "Qualidade da pega"]),
+m(T.ocr, "A equação NIOSH aplica-se a:", "Levantamento de cargas com as duas mãos em tarefas repetitivas", ["Empurrar e puxar cargas", "Carregar cargas por longas distâncias", "Levantamentos com uma só mão"]),
+m(T.ocr, "O exemplo do texto de aplicação da equação NIOSH resultou em ~10,7 kg. Isso significa que:", "A pessoa pode levantar até ~10,7 kg nessas condições sem danos osteomusculares", ["A pessoa pode levantar 23 kg", "A pessoa não deve levantar nenhuma carga", "O LPR é independente das condições"]),
+m(T.ocr, "O NASA-TLX avalia carga de trabalho, não apenas mental, porque inclui:", "A demanda física como uma das dimensões", ["A pressão sanguínea", "A frequência respiratória", "A taxa metabólica"]),
+m(T.ocr, "Qual é a lógica do peso de cada dimensão no NASA-TLX?", "O número de vezes que a dimensão foi escolhida na comparação aos pares", ["A intensidade marcada na escala de 20 pontos", "A opinião do analista", "A frequência cardíaca"]),
+m(T.ocr, "O NASA-TLX normalmente é aplicado:", "Após o sujeito ter realizado a tarefa em análise", ["Antes da tarefa", "Somente durante a tarefa", "Um ano depois da tarefa"]),
+v(T.ocr, "O OCRA é uma técnica semiquantitativa.", true),
+v(T.ocr, "O valor 23 kg da equação NIOSH é aceitável para 99% dos homens e 75% das mulheres.", true),
+v(T.ocr, "No NASA-TLX, uma dimensão pode ser escolhida no máximo cinco vezes.", true),
+v(T.ocr, "Na equação NIOSH, os fatores de redução podem assumir valores maiores que 1,0.", false, "São iguais ou inferiores a 1,0."),
+v(T.ocr, "A equação de NIOSH se baseou apenas em critérios econômicos.", false, "Baseou-se em critérios biomecânicos, fisiológicos e psicofísicos."),
+v(T.ocr, "No exemplo do NIOSH, a qualidade da pega ruim (caixa com paredes planas) gera C = 0,90.", true),
+
+// ───────────── AVALIAÇÕES FISIOLÓGICAS ─────────────
+c(T.fis, "A ___ (EMG) permite registrar os sinais elétricos produzidos durante a contração muscular.", ["eletromiografia"]),
+c(T.fis, "Na EMG, a força pode ser correlacionada usando uma célula de ___ e o ângulo das articulações com um eletrogoniômetro.", ["carga"]),
+c(T.fis, "Na EMG de superfície monopolar são colocados dois eletrodos: um ativo e um ___.", ["terra"]),
+c(T.fis, "Na EMG bipolar são colocados dois eletrodos ativos espaçados ___ cm um do outro.", ["2|dois"]),
+c(T.fis, "A EMG intramuscular é uma técnica ___, que introduz eletrodos no interior dos músculos.", ["invasiva"]),
+c(T.fis, "A EMG intramuscular geralmente não é usada em ergonomia, mas apenas em diagnósticos ___.", ["médicos|medicos"]),
+c(T.fis, "Os batimentos cardíacos são obtidos pelo ___ (ECG), medidos em bpm.", ["eletrocardiograma"]),
+c(T.fis, "A medição de batimentos é feita com ___ eletrodos sobre o tórax.", ["três|tres|3"]),
+c(T.fis, "A frequência cardíaca é uma medida ___ da intensidade do esforço.", ["indireta"]),
+c(T.fis, "Sob grandes esforços, a frequência cardíaca pode dobrar em 2 a 3 minutos, por exemplo de 70 para ___ bpm.", ["140"]),
+c(T.fis, "Estudos comprovam uma correlação ___ entre pressão sanguínea e estresse no trabalho.", ["positiva"]),
+c(T.fis, "O aumento da pressão sanguínea pode ___ o fluxo sanguíneo para as extremidades do corpo.", ["reduzir|diminuir"]),
+c(T.fis, "A frequência respiratória não é comumente usada em ergonomia porque a respiração não é um parâmetro ___.", ["unidimensional"]),
+c(T.fis, "A taxa metabólica é medida por calorimetria ___, medindo o consumo de oxigênio.", ["indireta"]),
+c(T.fis, "Na maioria dos estudos em ergonomia, quase toda a energia metabólica é transformada em ___ que permanece no corpo.", ["calor"]),
+c(T.fis, "A norma ISO ___ / EN28996 (1990) classifica a taxa metabólica com base na descrição do nível de atividade.", ["8996"]),
+c(T.fis, "Na ISO 8996, a classe 0 é o nível ___ (descansando).", ["basal"]),
+c(T.fis, "Na tabela da taxa metabólica há ___ classes de nível de atividade (de 0 a 4).", ["cinco|5"]),
+m(T.fis, "Qual a principal diferença entre EMG superficial e intramuscular?", "Superficial usa eletrodos na pele; intramuscular é invasiva e mais precisa, porém cara", ["Superficial é invasiva; intramuscular usa a pele", "Ambas são invasivas", "Não há diferença prática"]),
+m(T.fis, "Por que a EMG de superfície é geralmente suficiente em ergonomia?", "O registro dos músculos superficiais costuma bastar, mesmo sem saber exatamente quais fibras emitem os sinais", ["Porque identifica exatamente cada fibra muscular", "Porque é invasiva", "Porque não precisa de eletrodos"]),
+m(T.fis, "Qual é um exemplo de trabalho de taxa metabólica baixa (classe 1)?", "Trabalho manual leve sentado, como escrever ou digitar", ["Carregar sacos pesados", "Correr acima de 7 km/h", "Cavar com pá"]),
+m(T.fis, "Qual é um exemplo de classe 4 (taxa muito alta)?", "Atividade muito intensa em ritmo rápido ou máximo, como subir escadas ou correr", ["Escrever sentado", "Andar devagar até 3,5 km/h", "Dirigir veículos em condições normais"]),
+m(T.fis, "Andar normal (3,5 a 5,5 km/h) corresponde a qual classe de taxa metabólica?", "Classe 2 – taxa moderada", ["Classe 1 – baixa", "Classe 3 – alta", "Classe 0 – basal"]),
+m(T.fis, "Andar rápido (5,5 a 7 km/h) corresponde a qual classe?", "Classe 3 – taxa alta", ["Classe 2 – moderada", "Classe 4 – muito alta", "Classe 1 – baixa"]),
+m(T.fis, "A medida da pressão sanguínea é relevante porque:", "Está associada ao estresse e pode acelerar danos nos tecidos, precipitando DORT", ["Mede diretamente a postura", "Substitui o questionário nórdico", "Calcula o limite de peso"]),
+v(T.fis, "A EMG intramuscular é a técnica mais usada em ergonomia.", false),
+v(T.fis, "A energia metabólica transferida ao meio ambiente é pouco significativa na maioria dos estudos de ergonomia.", true),
+v(T.fis, "A frequência respiratória pode ser medida por um cinto ou colete sensível aos movimentos respiratórios.", true),
+v(T.fis, "O ECG mede a frequência das pulsações do coração em bpm.", true),
+v(T.fis, "Geralmente os estudos em ergonomia estimam a taxa metabólica com base em tabelas.", true),
+
+// ───────────── ANÁLISE COGNITIVA E USABILIDADE ─────────────
+c(T.cog, "O trabalho moderno depende cada vez menos de esforços físicos e mais do esforço ___.", ["cognitivo"]),
+c(T.cog, "A Análise Cognitiva da Tarefa (___) é aplicada em trabalhos com muita carga cognitiva: tomada de decisão, solução de problemas, memória, atenção e julgamento.", ["ACT"]),
+c(T.cog, "Existem mais de ___ métodos de ACT.", ["cem|100"]),
+c(T.cog, "O livro de Crandall, Klein e ___ (2006) é referência para aprofundar métodos de ACT.", ["Hoffman"]),
+c(T.cog, "A Análise Hierárquica da Tarefa (HTA) foi desenvolvida pela Universidade de ___.", ["Hull"]),
+c(T.cog, "A HTA foca as ___ da tarefa e as operações necessárias para atingi-las.", ["metas"]),
+c(T.cog, "O método HTA compõe-se de ___ etapas.", ["sete|7"]),
+c(T.cog, "Na HTA, uma operação é caracterizada pelo input, pelas ___ e pelo feedback.", ["ações|acoes"]),
+c(T.cog, "A principal desvantagem da HTA é consumir muito ___.", ["tempo"]),
+c(T.cog, "O método de ___ de funções ajuda a decidir se uma tarefa é melhor desempenhada por pessoas ou por subsistemas tecnológicos.", ["alocação|alocacao"]),
+c(T.cog, "A alocação de funções foi proposta no início por Fitts (1951) e ___ (1970).", ["Chapanis"]),
+c(T.cog, "O método de alocação de funções se desdobra em ___ etapas.", ["três|tres|3"]),
+c(T.cog, "O ___ Analysis (Chapanis, 1996) identifica a sequência de funções cujas decisões podem ser transformadas em respostas sim/não.", ["Decision-Action|decision action"]),
+c(T.cog, "GOMS significa Goals, Operators, Methods and ___.", ["Selection"]),
+c(T.cog, "Os protocolos verbais, ou protocolos de 'pensar ___', capturam as verbalizações do pensamento durante a tarefa.", ["alto"]),
+c(T.cog, "Os mapas ___ são desenhos/diagramas que representam como a atividade é compreendida pelo trabalhador.", ["cognitivos"]),
+c(T.cog, "A avaliação ___ analisa interfaces baseando-se em princípios de usabilidade formulados a partir de experiências.", ["heurística|heuristica"]),
+c(T.cog, "As heurísticas de ___ (1994) são em número de dez.", ["Nielsen"]),
+c(T.cog, "Na avaliação heurística, os avaliadores não devem ter ___ com o projeto da interface avaliada.", ["envolvimento"]),
+c(T.cog, "O Cognitive ___ é uma técnica usada pelo ergonomista, e não pelo usuário, que executa tarefas sob a perspectiva do usuário.", ["Walkthrough"]),
+c(T.cog, "O Computer System Usability Questionnaire (CSUQ), desenvolvido pela ___, tem 19 questões em escala de 7 pontos.", ["IBM"]),
+m(T.cog, "A HTA decompõe as atividades em:", "Operações e suboperações, com foco nas metas, e não nas ações em si", ["Ações isoladas sem relação com metas", "Posturas corporais", "Gastos energéticos"]),
+m(T.cog, "Hoje a alocação de funções considera, além da capacidade de processamento:", "Taxa de erros, carga, fadiga, custos, valores éticos, satisfação e empoderamento", ["Apenas o custo", "Apenas a velocidade de resposta", "Somente a vontade do gerente"]),
+m(T.cog, "O que é cognição distribuída?", "Descreve como a informação é apresentada e transmitida ao longo de uma cadeia de indivíduos e instrumentos do sistema", ["Um tipo de questionário", "Medida de pressão arterial", "Avaliação da postura do pescoço"]),
+m(T.cog, "O GOMS permite:", "Prever o desempenho humano e identificar/eliminar ações desnecessárias", ["Medir a frequência cardíaca", "Calcular o peso máximo", "Classificar posturas"]),
+m(T.cog, "Qual a heurística: 'um comando ou ação deve produzir sempre o mesmo efeito'?", "Consistência", ["Flexibilidade", "Visibilidade", "Reversibilidade"]),
+m(T.cog, "Qual heurística permite atalhos, abreviações, teclas de função e duplo clique para usuários assíduos?", "Flexibilidade", ["Consistência", "Sobrecarga de memória", "Prevenção de erros"]),
+m(T.cog, "Qual heurística exige que o sistema informe continuamente ao usuário o que está acontecendo (feedback)?", "Visibilidade", ["Consistência", "Blocos de ações", "Controle e liberdade"]),
+m(T.cog, "Qual heurística busca aliviar a memória de curta duração, mostrando elementos de diálogo sem exigir relembrar comandos?", "Sobrecarga de memória", ["Visibilidade", "Ajudas e documentações", "Apresentação e estética"]),
+m(T.cog, "Qual heurística defende linguagem do usuário, diálogos simples e 'limpos', sem informações irrelevantes?", "Apresentação e estética", ["Consistência", "Reversibilidade", "Flexibilidade"]),
+m(T.cog, "Qual heurística diz que o software ideal é fácil de usar e não necessita de ajuda extra?", "Ajudas e documentações", ["Visibilidade", "Blocos de ações", "Controle e liberdade"]),
+m(T.cog, "Qual heurística organiza longas sequências em blocos menores, cada um com começo, meio e fim?", "Blocos de ações", ["Flexibilidade", "Prevenção de erros", "Consistência"]),
+m(T.cog, "Qual heurística prevê e evita situações de erro, alertando o usuário antes da ação errada?", "Prevenção de erros", ["Reversibilidade", "Visibilidade", "Flexibilidade"]),
+m(T.cog, "Qual heurística dá saídas claramente marcadas e possibilidade de 'fazer' e 'desfazer'?", "Reversibilidade", ["Prevenção de erros", "Consistência", "Controle e liberdade"]),
+m(T.cog, "Qual heurística busca que os usuários sejam protagonistas que iniciam as ações?", "Controle e liberdade", ["Reversibilidade", "Visibilidade", "Consistência"]),
+m(T.cog, "O Cognitive Walkthrough estuda:", "A sequência das ações sob a perspectiva do usuário, mas não a satisfação com a interface", ["A satisfação do usuário com a interface", "O peso da carga manuseada", "A frequência cardíaca"]),
+m(T.cog, "Quais são as tarefas complexas tipicamente analisadas pela ACT?", "Controle operacional em usina de energia e controladores de voo", ["Digitação simples", "Carregamento de sacos", "Montagem de peças pequenas"]),
+v(T.cog, "A HTA não avalia as ações em si, mas as metas e operações.", true),
+v(T.cog, "O método de alocação de funções é considerado simplista, mas tradicional e útil.", true),
+v(T.cog, "Os avaliadores da avaliação heurística devem ser os próprios projetistas da interface.", false),
+v(T.cog, "O resultado da ACT geralmente descreve objetivos, equipamentos, conhecimento e padrões de desempenho.", true),
+v(T.cog, "O Cognitive Walkthrough é feito pelo usuário final.", false, "É feito pelo ergonomista/analista."),
+v(T.cog, "As mensagens de erro devem ser expressas em linguagem clara e sem códigos.", true),
+
+// ───────────── DESENVOLVIMENTO DE PRODUTO ─────────────
+c(T.prd, "O projeto ___ é um caso particular da ergonomia participativa, aplicado ao design de novos produtos ou redesign.", ["participativo"]),
+c(T.prd, "No projeto participativo, o usuário é envolvido desde a etapa ___, e não só na avaliação do protótipo.", ["inicial"]),
+c(T.prd, "Produtos 'perfeitos' tecnicamente podem ser grandes fracassos de ___ porque os consumidores têm outra escala de valores.", ["mercado"]),
+c(T.prd, "A Engenharia ___ enfatiza os sentimentos e impressões dos usuários e se relaciona ao design emocional.", ["Kansei"]),
+c(T.prd, "O QFD (Quality Function Deployment) 'traduz a voz do ___' em características desejáveis do produto.", ["cliente"]),
+c(T.prd, "No QFD, a matriz da 'casa da ___' permite priorizar atributos e pesar trade-offs.", ["qualidade"]),
+c(T.prd, "O Design para ___ (DfA) procura desenvolver produtos com menos partes, eliminando partes cortantes e de difícil manuseio.", ["montagem"]),
+c(T.prd, "O Design para ___ (DfD) é um complemento do DfA, facilitando o manuseio e reduzindo tempo e custo de desmontagem.", ["desmontagem"]),
+c(T.prd, "O Design para ___ (DfM) enfatiza a facilidade para manutenção.", ["manutenção|manutencao"]),
+c(T.prd, "O Design para o Meio ___ (DfE) amplia DfA, DfD e DfM acrescentando quesitos ambientais, como reciclagem e reúso.", ["ambiente"]),
+m(T.prd, "Qual a principal diferença entre o projeto tradicional e o participativo?", "No tradicional, o usuário só é envolvido na fase final de avaliação do protótipo", ["No tradicional o usuário participa desde o início", "No participativo só os especialistas decidem", "Não há diferença"]),
+m(T.prd, "Por que o feedback no projeto tradicional é problemático?", "É demorado e, se há erro de concepção, a correção é difícil pois o projeto está adiantado", ["Porque não há protótipo", "Porque há muitos usuários", "Porque o custo é sempre menor"]),
+m(T.prd, "Qual método traduz a voz do cliente usando a 'casa da qualidade'?", "QFD", ["DfA", "Kansei", "DfE"]),
+m(T.prd, "O livro de Helander e Nagamachi (1992) apresenta:", "Abordagem sistêmica de projeto ergonômico de manufatura", ["Uma lista de checklists de postura", "Somente normas de NR17", "Métodos de cálculo de NIOSH"]),
+v(T.prd, "No projeto participativo há separação clara entre projeto e avaliação.", false, "Não há separação; os usuários avaliam continuamente a cada etapa."),
+v(T.prd, "O DfE preocupa-se também com reciclagem, remanufatura, reúso e deposição do produto no fim do ciclo de vida.", true),
+
+// ───────────── ANÁLISE ERGONÔMICA E AET ─────────────
+c(T.aet, "A análise ergonômica visa observar, diagnosticar e ___ uma situação real de trabalho.", ["corrigir"]),
+c(T.aet, "Segundo a NR17, Anexo II, item 8.4, a análise ergonômica deve contemplar, no mínimo, ___ tópicos.", ["seis|6"]),
+c(T.aet, "Um dos tópicos da análise ergonômica é a descrição das características dos ___ de trabalho.", ["postos"]),
+c(T.aet, "O relatório ___ inclui as frequências de incidências das queixas de agravos à saúde, colhidas nos prontuários médicos.", ["estatístico|estatistico"]),
+c(T.aet, "Os relatórios de avaliações levantam o grau de satisfação no trabalho e o clima ___.", ["organizacional"]),
+c(T.aet, "No tópico registro e análise, coletam-se as impressões e ___ dos trabalhadores.", ["sugestões|sugestoes"]),
+c(T.aet, "As recomendações ergonômicas devem ter definição das datas de ___ e de acompanhamento.", ["implantação|implantacao|implementação|implementacao"]),
+c(T.aet, "A análise ergonômica deve ser apresentada em documento escrito, datado, com folhas numeradas e ___.", ["rubricadas"]),
+c(T.aet, "A primeira etapa obrigatória da apresentação da análise ergonômica é a explicitação da ___ (situação problemática).", ["demanda"]),
+c(T.aet, "No Brasil, os métodos mais difundidos são a AET e a Intervenção ___.", ["ergonomizadora"]),
+c(T.aet, "A AET foi desenvolvida por pesquisadores ___ e é um exemplo de ergonomia de correção.", ["franceses"]),
+c(T.aet, "A AET desdobra-se em ___ etapas.", ["cinco|5"]),
+c(T.aet, "As três primeiras etapas da AET (demanda, tarefa e atividade) constituem a fase de ___.", ["análise|analise"]),
+c(T.aet, "Na AET, a ___ (task) é o trabalho prescrito.", ["tarefa"]),
+c(T.aet, "Na AET, a ___ é o trabalho real executado pelo trabalhador.", ["atividade"]),
+c(T.aet, "O ___ (job) é o conjunto de tarefas, atribuições e responsabilidades exercidas regularmente por uma pessoa.", ["cargo"]),
+c(T.aet, "O cargo não deve ser confundido com a ___ que o exerce.", ["pessoa"]),
+c(T.aet, "Exemplo: cargo de pedreiro; tarefa: rebocar parede; ação: ___ tijolo.", ["apanhar|posicionar|nivelar"]),
+c(T.aet, "A demanda pode vir da direção da empresa, dos trabalhadores/sindicatos e dos órgãos públicos de fiscalização: ___ e DRT.", ["MPT"]),
+c(T.aet, "Quando não há consenso entre os atores sobre o problema, é necessário um processo de ___ entre as partes.", ["negociação|negociacao"]),
+c(T.aet, "A AET analisa as divergências entre aquilo que é prescrito (tarefa) e o que é executado realmente (___).", ["atividade"]),
+c(T.aet, "Os fatores ___ da atividade localizam-se no próprio trabalhador: formação, experiência, idade, motivação, fadiga.", ["internos"]),
+c(T.aet, "Os fatores ___ referem-se às condições em que a atividade é executada.", ["externos"]),
+c(T.aet, "São os quatro fatores externos: conteúdo do trabalho, organização do trabalho, meios ___ e condições ambientais.", ["técnicos|tecnicos"]),
+c(T.aet, "O ___ procura descobrir as causas que provocam o problema descrito na demanda.", ["diagnóstico|diagnostico"]),
+c(T.aet, "As recomendações devem indicar responsabilidades: pessoa, seção ou departamento encarregado e o ___.", ["prazo"]),
+m(T.aet, "Quais são as cinco etapas da AET?", "Análise da demanda, da tarefa, da atividade, formulação do diagnóstico e recomendações", ["Observação, entrevista, questionário, checklist e relatório", "Demanda, planejamento, execução, controle e encerramento", "Tarefa, cargo, ação, postura e diagnóstico"]),
+m(T.aet, "Qual é a diferença entre tarefa e atividade?", "Tarefa é o trabalho prescrito; atividade é o trabalho real", ["Tarefa é o trabalho real; atividade é o prescrito", "São idênticas em qualquer situação", "Tarefa é um cargo; atividade é uma pessoa"]),
+m(T.aet, "Por que a AET não pode basear-se apenas nas tarefas?", "Porque nem todos seguem o método prescrito e as condições reais diferem das previstas", ["Porque tarefas não existem", "Porque a atividade é sempre idêntica à tarefa", "Porque os manuais são proibidos"]),
+m(T.aet, "Qual das opções não faz parte dos fatores externos da atividade?", "Idade do trabalhador", ["Organização do trabalho", "Meios técnicos", "Condições ambientais"]),
+m(T.aet, "Qual dos itens é fator interno?", "Motivação e fadiga momentâneas", ["Iluminamento", "Turnos", "Arranjo do posto"]),
+m(T.aet, "Exemplo de diagnóstico: absenteísmo pode ser provocado por:", "Gases tóxicos que causam doenças respiratórias", ["Pisos escorregadios", "Materiais defeituosos", "Treinamento insuficiente"]),
+m(T.aet, "Exemplo de diagnóstico: rotatividade pode ser devida a:", "Treinamento insuficiente ou elevada carga de estresse", ["Gases tóxicos", "Pisos escorregadios", "Materiais defeituosos"]),
+m(T.aet, "Exemplo de diagnóstico: acidentes podem ser causados por:", "Pisos escorregadios, instruções mal interpretadas, manutenção deficiente", ["Apenas falta de motivação", "Somente carga mental", "Treinamento excessivo"]),
+m(T.aet, "Qual das opções NÃO é um dos seis tópicos mínimos da NR17?", "Plano de carreira dos trabalhadores", ["Descrição das características dos postos de trabalho", "Avaliação da organização do trabalho", "Recomendações ergonômicas"]),
+m(T.aet, "A avaliação da organização do trabalho verifica, entre outros:", "Trabalho prescrito e real, pausas, ritmo, turnos, horas extras e sobrecargas", ["Somente o layout do posto", "Apenas a antropometria", "Apenas o ruído"]),
+m(T.aet, "Qual alternativa descreve a etapa de análise da demanda?", "Entender a natureza e a dimensão do problema, que pode estar apresentado de forma parcial", ["Medir a postura dos trabalhadores", "Calcular o índice OCRA", "Aplicar a escala de Borg"]),
+m(T.aet, "Etapa 3 da apresentação da análise ergonômica:", "Divulgação e discussão dos resultados com os trabalhadores envolvidos", ["Explicitação da demanda", "Avaliação da eficiência das recomendações", "Análise de custo-benefício"]),
+m(T.aet, "Se necessário, as recomendações ergonômicas podem incluir:", "Desenhos detalhando modificações e análise custo/benefício", ["Apenas opinião verbal", "Cálculo do Índice OCRA", "Somente relatórios médicos"]),
+m(T.aet, "Em pequenas e médias empresas sem descrição formal de cargos, na prática:", "Tarefa e atividade podem ter o mesmo significado", ["Não existe tarefa", "Atividade é sempre proibida", "Cargo é a pessoa"]),
+v(T.aet, "A AET é um exemplo de ergonomia de concepção.", false, "É ergonomia de correção."),
+v(T.aet, "O cargo continua existindo mesmo que nenhuma pessoa o ocupe.", true),
+v(T.aet, "A tarefa pode ser decomposta em várias ações mais detalhadas.", true),
+v(T.aet, "A atividade resulta de um processo de adaptação e regulação entre fatores internos e externos.", true),
+v(T.aet, "A análise ergonômica deve incluir avaliação e revisão das providências com participação de trabalhadores, supervisores e gerentes.", true),
+v(T.aet, "A demanda pode ter origem apenas na direção da empresa.", false, "Também de trabalhadores, sindicatos e órgãos de fiscalização."),
+
+// ───────────── PERGUNTAS ABERTAS DE REVISÃO (fim do capítulo) ─────────────
+o(T.met, "Como se diferenciam métodos de técnicas?", "Técnicas são operações/ações ou modos de executar uma atividade e são hierarquicamente inferiores ao método. O método é mais amplo e pode ser composto de várias técnicas; a mesma técnica pode servir a vários métodos."),
+o(T.aet, "Quais são as metas da Análise Ergonômica do Trabalho (AET)?", "Observar, diagnosticar e corrigir uma situação real de trabalho aplicando conhecimentos de ergonomia: analisar a demanda, a tarefa (prescrito) e a atividade (real), formular o diagnóstico e fazer recomendações ergonômicas."),
+o(T.qst, "Quais são as vantagens e desvantagens do questionário?", "Vantagens: grande número de sujeitos, economia de tempo e custo, facilidade de compilação com resultados numéricos, preenchimento online. Desvantagens: pouca flexibilidade, superficialidade e distorções nas respostas (ex.: efeito halo)."),
+o(T.ent, "Que cuidados devem ser tomados nas entrevistas?", "Ouvir mais e falar menos; perguntas curtas e diretas; vocabulário adequado ao entrevistado; eliminar perguntas tendenciosas; manter postura adequada; evitar tratamentos diferenciados; obter consentimento para gravar; deixar o entrevistado à vontade."),
+o(T.ent, "Quando se aplica o grupo de foco?", "Em etapas iniciais do projeto (definir características) e intermediárias (avaliar alternativas), ou como complemento a entrevistas e questionários; reúne 6 a 10 pessoas representativas, com coordenador neutro. Maior vantagem: neutralizar a influência do entrevistador."),
+o(T.obs, "Quais são as vantagens e desvantagens da observação direta?", "Vantagem: realismo (as pessoas 'falam uma coisa e fazem outra'). Desvantagens: efeito da presença do observador (tipo Hawthorne) e o tempo gasto, sobretudo em eventos de baixa frequência."),
+o(T.psi, "Quando e como se aplica o diagrama de dores (áreas dolorosas)?", "Ao final de um período de trabalho, com o diagrama do corpo em vista dorsal dividido em 12 segmentos simétricos: o trabalhador aponta onde sente dor e avalia o desconforto de 0 (sem problema) a 5 (insuportável). Serve para mapear rápido e barato a empresa e priorizar níveis 4 e 5."),
+o(T.pos, "Qual é a utilidade do sistema OWAS?", "Registrar e analisar posturas de trabalho (dorso, braços, pernas e carga), com código de seis dígitos, 252 combinações possíveis, observações a cada ~30 s (mín. 100), classificando em 4 classes de ação, apontando posturas que precisam de melhoria."),
+o(T.ocr, "Quais são as principais recomendações da equação de NIOSH?", "Calcular o limite de peso recomendado (LPR) a partir de 23 kg de referência, reduzido por seis fatores (H, V, D, A, F, C) ≤ 1,0, para levantamentos repetitivos com as duas mãos; otimizar os fatores (aproximar a carga, reduzir deslocamento/assimetria/frequência, melhorar a pega) para respeitar o limite."),
+o(T.ocr, "Qual é a vantagem da avaliação NASA-TLX?", "Avalia quantitativamente a carga de trabalho de forma multidimensional (mental, física, temporal, performance, esforço e frustração), com média ponderada pelos pesos que o próprio sujeito atribui às dimensões; não avalia só a carga mental."),
+];
+
+</script>
+<script>
+(() => {
+const $app = document.getElementById("app");
+const KEY = "ergo-simulado-v1";
+const TYPE_LABEL = { c: "Completar", m: "Múltipla escolha", v: "Verdadeiro/Falso", o: "Pergunta aberta" };
+
+// ids estáveis (hash do enunciado) para o progresso sobreviver a edições na ordem
+const hash = s => { let h = 5381; for (const ch of s) h = ((h << 5) + h + ch.charCodeAt(0)) >>> 0; return h.toString(36); };
+QUESTIONS.forEach(q => q.id = hash((q.text || q.q) + q.type));
+
+const load = () => { try { return JSON.parse(localStorage.getItem(KEY)) || {}; } catch { return {}; } };
+const save = d => { try { localStorage.setItem(KEY, JSON.stringify(d)); } catch {} };
+let store = load(); store.stats = store.stats || {}; store.prefs = store.prefs || {};
+
+const shuffle = a => { a = a.slice(); for (let i = a.length - 1; i > 0; i--) { const j = Math.random() * (i + 1) | 0; [a[i], a[j]] = [a[j], a[i]]; } return a; };
+const esc = s => String(s).replace(/[&<>"]/g, ch => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[ch]));
+const norm = s => s.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "").replace(/[-–_]/g, " ").replace(/[^a-z0-9 /,.%]/g, "").replace(/%/g, "").replace(/\s+/g, " ").trim();
+const lev = (a, b) => { const d = Array.from({ length: a.length + 1 }, (_, i) => [i]); for (let j = 1; j <= b.length; j++) d[0][j] = j;
+  for (let i = 1; i <= a.length; i++) for (let j = 1; j <= b.length; j++) d[i][j] = Math.min(d[i-1][j] + 1, d[i][j-1] + 1, d[i-1][j-1] + (a[i-1] === b[j-1] ? 0 : 1)); return d[a.length][b.length]; };
+// retorna "exact" | "typo" | "" ; erro de digitação (1 letra) só vale para palavras longas
+const matchBlank = (input, alts) => {
+  const u = norm(input); if (!u) return "";
+  let typo = false;
+  for (const a of alts) { const n = norm(a); if (u === n) return "exact"; if (n.length >= 7 && lev(u, n) <= 1) typo = true; }
+  return typo ? "typo" : "";
+};
+
+const record = (q, ok) => { const s = store.stats[q.id] || { ok: 0, bad: 0 }; s[ok ? "ok" : "bad"]++; s.last = ok; store.stats[q.id] = s; save(store); };
+
+// ───────── estado da rodada ─────────
+let run = null;
+
+function topicsList() { return [...new Set(QUESTIONS.map(q => q.topic))]; }
+
+function home() {
+  run = null;
+  const prefs = store.prefs;
+  const topics = topicsList();
+  const selT = new Set(prefs.topics || topics);
+  const selY = new Set(prefs.types || ["c", "m", "v"]);
+  const count = prefs.count || 20;
+  const wrongIds = QUESTIONS.filter(q => store.stats[q.id] && store.stats[q.id].last === false);
+  const unseen = QUESTIONS.filter(q => !store.stats[q.id]);
+  const seen = QUESTIONS.length - unseen.length;
+  const totOk = Object.values(store.stats).reduce((a, s) => a + s.ok, 0), totBad = Object.values(store.stats).reduce((a, s) => a + s.bad, 0);
+  const acc = totOk + totBad ? Math.round(100 * totOk / (totOk + totBad)) : 0;
+
+  $app.innerHTML = `
+  <h1>Simulado de Ergonomia</h1>
+  <div class="sub">Cap. 3 — Métodos e técnicas em ergonomia · ${QUESTIONS.length} questões · o progresso fica salvo neste navegador</div>
+  <div class="card"><div class="stats">
+    <div class="stat"><b>${seen}/${QUESTIONS.length}</b><span>questões já vistas</span></div>
+    <div class="stat"><b>${acc}%</b><span>acerto geral</span></div>
+    <div class="stat"><b>${wrongIds.length}</b><span>para revisar (último erro)</span></div>
+  </div></div>
+  <div class="card">
+    <h2 style="margin-top:0">Tipos de questão</h2>
+    <div class="row" id="types">${Object.entries(TYPE_LABEL).map(([k, l]) => `<button class="chip ${selY.has(k) ? "on" : ""}" data-t="${k}">${l} (${QUESTIONS.filter(q => q.type === k).length})</button>`).join("")}</div>
+    <h2>Assuntos <button class="chip" id="allT" style="margin-left:6px">todos / nenhum</button></h2>
+    <div class="topics" id="topics">${topics.map(t => {
+      const qs = QUESTIONS.filter(q => q.topic === t); const st = qs.map(q => store.stats[q.id]).filter(Boolean);
+      const ok = st.reduce((a, s) => a + s.ok, 0), bad = st.reduce((a, s) => a + s.bad, 0);
+      return `<label class="topic ${selT.has(t) ? "on" : ""}"><input type="checkbox" value="${esc(t)}" ${selT.has(t) ? "checked" : ""}><span>${esc(t)}<small>${qs.length} questões${ok + bad ? ` · ${Math.round(100 * ok / (ok + bad))}% de acerto` : ""}</small></span></label>`; }).join("")}</div>
+    <h2>Quantas questões?</h2>
+    <div class="row" id="counts">${[10, 20, 50, 100, 0].map(n => `<button class="chip ${count === n ? "on" : ""}" data-n="${n}">${n || "Todas"}</button>`).join("")}</div>
+    <div class="row" style="margin-top:18px">
+      <button class="pri" id="go">Começar simulado</button>
+      <button id="goWrong" ${wrongIds.length ? "" : "disabled"}>Revisar só os erros (${wrongIds.length})</button>
+      <button id="goNew" ${unseen.length ? "" : "disabled"}>Só as nunca vistas (${unseen.length})</button>
+      <button class="right" id="reset">Zerar progresso</button>
+    </div>
+  </div>
+  <div class="hint">Dica: nas questões de completar, acentos e maiúsculas não importam. Atalhos: Enter confirma/avança · 1–4 escolhem alternativas.</div>`;
+
+  const readSel = () => ({
+    types: [...document.querySelectorAll("#types .on")].map(b => b.dataset.t),
+    topics: [...document.querySelectorAll("#topics input:checked")].map(i => i.value),
+    count: +document.querySelector("#counts .on").dataset.n,
+  });
+  document.getElementById("types").onclick = e => { const b = e.target.closest("button"); if (b) b.classList.toggle("on"); };
+  document.getElementById("counts").onclick = e => { const b = e.target.closest("button"); if (!b) return; document.querySelectorAll("#counts .chip").forEach(x => x.classList.remove("on")); b.classList.add("on"); };
+  document.getElementById("topics").onchange = e => e.target.closest(".topic").classList.toggle("on", e.target.checked);
+  document.getElementById("allT").onclick = () => { const all = [...document.querySelectorAll("#topics input")]; const any = all.some(i => !i.checked); all.forEach(i => { i.checked = any; i.closest(".topic").classList.toggle("on", any); }); };
+  const start = (filter) => {
+    const s = readSel(); store.prefs = s; save(store);
+    let pool = QUESTIONS.filter(q => s.types.includes(q.type) && s.topics.includes(q.topic) && (!filter || filter(q)));
+    if (!pool.length) { alert("Nenhuma questão com esses filtros."); return; }
+    pool = shuffle(pool); if (s.count) pool = pool.slice(0, s.count);
+    begin(pool);
+  };
+  document.getElementById("go").onclick = () => start();
+  document.getElementById("goWrong").onclick = () => start(q => store.stats[q.id] && store.stats[q.id].last === false);
+  document.getElementById("goNew").onclick = () => start(q => !store.stats[q.id]);
+  document.getElementById("reset").onclick = () => { if (confirm("Apagar todo o progresso salvo?")) { store.stats = {}; save(store); home(); } };
+}
+
+function begin(pool) { run = { pool, i: 0, answers: [], answered: false }; show(); }
+
+function show() {
+  if (run.i >= run.pool.length) return finish();
+  const q = run.pool[run.i]; run.answered = false; run.cur = null;
+  const pct = Math.round(100 * run.i / run.pool.length);
+  const okN = run.answers.filter(a => a.ok).length;
+  let body = "";
+  if (q.type === "c") {
+    let k = 0; body = `<div class="q">${esc(q.text).replace(/___/g, () => `<input class="blank" data-k="${k++}" autocomplete="off" autocapitalize="off" spellcheck="false" aria-label="lacuna">`)}</div>
+      <div class="row"><button class="pri" id="check">Responder</button><button id="skip">Não sei</button></div>`;
+  } else if (q.type === "m") {
+    q.opts = shuffle([q.correct, ...q.wrong]);
+    body = `<div class="q">${esc(q.q)}</div><div class="opts">${q.opts.map((o, n) => `<button class="opt" data-n="${n}"><span class="k">${n + 1}</span><span>${esc(o)}</span></button>`).join("")}</div>`;
+  } else if (q.type === "v") {
+    body = `<div class="q">${esc(q.q)}</div><div class="opts"><button class="opt" data-v="1"><span class="k">1</span><span>Verdadeiro</span></button><button class="opt" data-v="0"><span class="k">2</span><span>Falso</span></button></div>`;
+  } else {
+    body = `<div class="q">${esc(q.q)}</div><textarea id="free" placeholder="Escreva sua resposta com suas palavras (opcional)…"></textarea><div class="row" style="margin-top:10px"><button class="pri" id="reveal">Mostrar resposta modelo</button></div>`;
+  }
+  $app.innerHTML = `
+    <div class="row"><button id="quit">← Sair</button><span class="right sub" style="margin:0">${okN} acertos em ${run.answers.length}</span></div>
+    <div class="bar" style="margin-top:12px"><i style="width:${pct}%"></i></div>
+    <div class="meta"><span>Questão ${run.i + 1} de ${run.pool.length}</span><span><span class="badge">${TYPE_LABEL[q.type]}</span>${esc(q.topic)}</span></div>
+    <div class="card" id="card">${body}<div id="fb"></div></div>`;
+  document.getElementById("quit").onclick = () => { if (!run.answers.length || confirm("Sair da rodada? O que já foi respondido fica salvo.")) home(); };
+  wire(q);
+}
+
+function wire(q) {
+  if (q.type === "c") {
+    const inputs = [...document.querySelectorAll("input.blank")];
+    inputs[0].focus();
+    inputs.forEach((inp, n) => inp.addEventListener("keydown", e => { if (e.key === "Enter") { e.preventDefault(); if (run.answered) return; n < inputs.length - 1 ? inputs[n + 1].focus() : checkCloze(q, inputs); } }));
+    document.getElementById("check").onclick = () => checkCloze(q, inputs);
+    document.getElementById("skip").onclick = () => checkCloze(q, inputs, true);
+  } else if (q.type === "m") {
+    document.querySelectorAll(".opt").forEach(b => b.onclick = () => answerMC(q, +b.dataset.n));
+  } else if (q.type === "v") {
+    document.querySelectorAll(".opt").forEach(b => b.onclick = () => answerVF(q, b.dataset.v === "1"));
+  } else {
+    document.getElementById("reveal").onclick = () => revealOpen(q);
+  }
+}
+
+function checkCloze(q, inputs, giveUp) {
+  if (run.answered) return; run.answered = true;
+  let allOk = true, typo = false;
+  inputs.forEach((inp, n) => { const r = giveUp ? "" : matchBlank(inp.value, q.answers[n]); inp.classList.add(r ? "ok" : "ko"); inp.readOnly = true; if (!r) allOk = false; if (r === "typo") typo = true; });
+  const gab = q.answers.map(a => `<b>${esc(a[0])}</b>`).join(" · ");
+  const rec = { q, ok: allOk, given: inputs.map(i => i.value).join(" / ") || "(em branco)" };
+  run.answers.push(rec); record(q, allOk);
+  const fb = document.getElementById("fb");
+  fb.innerHTML = `<div class="fb ${allOk ? (typo ? "wa" : "ok") : "ko"}"><b class="t">${allOk ? (typo ? "Aceito (quase igual, confira a grafia)" : "Correto!") : (giveUp ? "Sem problema — veja a resposta" : "Não foi dessa vez")}</b>
+    ${allOk && !typo ? "" : `Resposta: ${gab}`}${q.answers.some(a => a.length > 1) && !allOk ? `<div class="exp">Também aceito: ${q.answers.map(a => a.slice(1).map(esc).join(", ") || "—").join(" · ")}</div>` : ""}
+    ${q.exp ? `<div class="exp">${esc(q.exp)}</div>` : ""}</div>
+    <div class="row" style="margin-top:12px"><button class="pri" id="next">Próxima →</button>${allOk ? "" : `<button id="override">Minha resposta estava certa</button>`}</div>`;
+  const ov = document.getElementById("override");
+  if (ov) ov.onclick = () => { rec.ok = true; const s = store.stats[q.id]; s.bad--; s.ok++; s.last = true; save(store); inputs.forEach(i => { i.classList.remove("ko"); i.classList.add("ok"); }); ov.remove(); fb.querySelector(".fb").className = "fb ok"; fb.querySelector("b.t").textContent = "Marcada como correta"; };
+  document.getElementById("next").onclick = next; document.getElementById("next").focus();
+}
+
+function answerMC(q, n) {
+  if (run.answered) return; run.answered = true;
+  const ok = q.opts[n] === q.correct;
+  document.querySelectorAll(".opt").forEach((b, i) => { b.disabled = true; if (q.opts[i] === q.correct) b.classList.add("ok"); else if (i === n) b.classList.add("ko"); });
+  run.answers.push({ q, ok, given: q.opts[n] }); record(q, ok);
+  feedback(q, ok, `Resposta certa: <b>${esc(q.correct)}</b>`);
+}
+function answerVF(q, val) {
+  if (run.answered) return; run.answered = true;
+  const ok = val === q.ans;
+  document.querySelectorAll(".opt").forEach(b => { b.disabled = true; const bv = b.dataset.v === "1"; if (bv === q.ans) b.classList.add("ok"); else if (bv === val) b.classList.add("ko"); });
+  run.answers.push({ q, ok, given: val ? "Verdadeiro" : "Falso" }); record(q, ok);
+  feedback(q, ok, `A afirmação é <b>${q.ans ? "verdadeira" : "falsa"}</b>.`);
+}
+function feedback(q, ok, line) {
+  document.getElementById("fb").innerHTML = `<div class="fb ${ok ? "ok" : "ko"}"><b class="t">${ok ? "Correto!" : "Incorreto"}</b>${ok ? "" : line}${q.exp ? `<div class="exp">${esc(q.exp)}</div>` : ""}</div><div class="row" style="margin-top:12px"><button class="pri" id="next">Próxima →</button></div>`;
+  document.getElementById("next").onclick = next; document.getElementById("next").focus();
+}
+function revealOpen(q) {
+  if (run.answered) return; run.answered = true;
+  const mine = document.getElementById("free").value.trim();
+  document.getElementById("free").readOnly = true;
+  document.getElementById("reveal").remove();
+  document.getElementById("fb").innerHTML = `<div class="fb wa"><b class="t">Resposta modelo</b>${esc(q.model)}</div>
+    <p class="exp" style="margin-bottom:6px">Compare com a sua resposta. Você acertou o essencial?</p>
+    <div class="row"><button class="pri" id="yes">Acertei</button><button id="no">Preciso rever</button></div>`;
+  const done = ok => { run.answers.push({ q, ok, given: mine || "(sem texto)" }); record(q, ok); next(); };
+  document.getElementById("yes").onclick = () => done(true); document.getElementById("no").onclick = () => done(false);
+}
+
+function next() { run.i++; show(); }
+
+function finish() {
+  const total = run.answers.length, ok = run.answers.filter(a => a.ok).length, pct = total ? Math.round(100 * ok / total) : 0;
+  const by = {}; run.answers.forEach(a => { const t = a.q.topic; by[t] = by[t] || [0, 0]; by[t][1]++; if (a.ok) by[t][0]++; });
+  const misses = run.answers.filter(a => !a.ok);
+  const ans = a => a.q.type === "c" ? a.q.answers.map(x => x[0]).join(" · ") : a.q.type === "m" ? a.q.correct : a.q.type === "v" ? (a.q.ans ? "Verdadeiro" : "Falso") : a.q.model;
+  const stmt = a => a.q.type === "c" ? a.q.text : a.q.q;
+  $app.innerHTML = `<h1>Resultado</h1>
+  <div class="card"><div class="stats">
+    <div class="stat"><b>${ok}/${total}</b><span>acertos</span></div>
+    <div class="stat"><b>${pct}%</b><span>aproveitamento</span></div>
+    <div class="stat"><b>${misses.length}</b><span>para revisar</span></div></div>
+    <h2>Por assunto</h2>${Object.entries(by).map(([t, [a, b]]) => `<div class="meta" style="margin:6px 0 2px"><span>${esc(t)}</span><span>${a}/${b}</span></div><div class="bar"><i style="width:${100 * a / b}%"></i></div>`).join("")}
+  </div>
+  ${misses.length ? `<div class="card"><h2 style="margin-top:0">O que você errou</h2>${misses.map(a => `<div class="miss"><div>${esc(stmt(a))}</div><div><small>Você: ${esc(a.given)}</small></div><div><b style="color:var(--ok)">${esc(ans(a))}</b></div>${a.q.exp ? `<small>${esc(a.q.exp)}</small>` : ""}</div>`).join("")}</div>` : `<div class="card">🎉 Rodada perfeita!</div>`}
+  <div class="row">${misses.length ? `<button class="pri" id="again">Refazer só os erros</button>` : ""}<button id="home" ${misses.length ? "" : 'class="pri"'}>Nova rodada</button></div>`;
+  const again = document.getElementById("again"); if (again) again.onclick = () => begin(shuffle(misses.map(a => a.q)));
+  document.getElementById("home").onclick = home;
+}
+
+// atalhos globais
+document.addEventListener("keydown", e => {
+  if (!run || e.target.tagName === "TEXTAREA") return;
+  const q = run.pool[run.i]; if (!q) return;
+  if (e.key === "Enter" && run.answered) { const n = document.getElementById("next"); if (n && document.activeElement !== n) { e.preventDefault(); n.click(); } }
+  if (!run.answered && e.target.tagName !== "INPUT") {
+    if (q.type === "m" && /^[1-4]$/.test(e.key)) answerMC(q, +e.key - 1);
+    if (q.type === "v" && (e.key === "1" || e.key === "2")) answerVF(q, e.key === "1");
+  }
+});
+
+home();
+})();
+</script>
+</body>
+</html>
